@@ -445,3 +445,8 @@ class FinetuningkanModel(BaseModel):
         self.optimizer.step()                       
         self.ema.update(self.decoder.parameters())
 
+    @staticmethod
+    def get_option_setter():
+    return FinetuningKANModel.modify_commandline_options
+
+
