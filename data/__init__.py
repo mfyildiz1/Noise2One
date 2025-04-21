@@ -118,8 +118,8 @@ class CustomDatasetDataLoader_gopro():
             self.dataset,
             batch_size=opt.batch_size if split=='train' else 1,
             shuffle= shuffle,
-            num_workers=int(opt.num_threads)) 
-            drop_last=True
+            num_workers=int(opt.num_threads),
+            drop_last=True)
 
     def load_data(self):
         return self
