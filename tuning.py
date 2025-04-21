@@ -9,12 +9,18 @@ import util
 if __name__ == '__main__':
     opt = TuningOptions().parse()   # get training options
 
-    dataset = create_dataset(opt, 'tuning')  # create tuning dataset
-    dataset_size = len(dataset)
-    print('The number of tuning images = %d' % dataset_size)
+    # Create tuning and validation datasets
+    dataset = create_dataset(opt, 'tuning')
+    validation = create_dataset(opt, 'valid')
 
-    model = create_model(opt)      # create a model
-    model.setup(opt)               # load and print networks
+    dataset_size = len(dataset)
+    validation_size = len(validation)
+
+    print('The number of tuning images = %d' % dataset_size)
+    print('The number of validation images = %d' % validation_size)
+
+    model = create_model(opt)
+    model.setup(opt)
     visualizer = Visualizer(opt)
 
     total_iters = 0
@@ -57,31 +63,34 @@ if __name__ == '__main__':
 
             iter_data_time = time.time()
 
-        # Validation kısmı geçici olarak devre dışı bırakıldı
-        # Eğer ileride validasyon klasörü oluşturursan bu kısmı tekrar aktifleştirebilirsin
+        # Validation Evaluation
+        if epoch % opt.valid_epoch_freq == 0:
+            valid_psnr = 0
+            model.decoder.eval()
+            np.random.seed(11)
 
-        # if epoch % opt.valid_epoch_freq == 0:
-        #     valid_psnr = 0
-        #     model.decoder.eval()
-        #     np.random.seed(11)
-        #     valid_name = opt.valid_name
-        #     valid_repeat_times = {"Kodak24": 10, "BSD300": 3, "Set14": 20}
-        #     repeat = valid_repeat_times[valid_name]
-        #     for i in range(repeat):
-        #         for i, data in enumerate(validation):
-        #             model.set_input_val(data)
-        #             psnr, _ = model.forward_psnr(False)
-        #             valid_psnr += psnr
-        #     valid_psnr /= validation_size * repeat
-        #     if valid_psnr > best_psnr:
-        #         print('saving the best model of the best epoch %d, iters %d' % (epoch, total_iters))
-        #         best_psnr = valid_psnr
-        #         best_epoch = epoch
-        #         model.save_networks('best')
-        #         model.save_ema('best')
-        #         model.save_state('best')
-        #     print('epoch %d / %d \t Validation: %.4f dB Best_PSNR(Best epoch %d) : %.4f dB' %
-        #           (epoch, opt.n_epochs + opt.n_epochs_decay, valid_psnr, best_epoch, best_psnr))
+            valid_name = opt.valid_name
+            valid_repeat_times = {"Kodak24": 10, "BSD300": 3, "Set14": 20, "configs/light.yaml": 1}
+            repeat = valid_repeat_times.get(valid_name, 1)
+
+            for _ in range(repeat):
+                for i, data in enumerate(validation):
+                    model.set_input_val(data)
+                    psnr, _ = model.forward_psnr(False)
+                    valid_psnr += psnr
+
+            valid_psnr /= validation_size * repeat
+
+            if valid_psnr > best_psnr:
+                print('saving the best model of the best epoch %d, iters %d' % (epoch, total_iters))
+                best_psnr = valid_psnr
+                best_epoch = epoch
+                model.save_networks('best')
+                model.save_ema('best')
+                model.save_state('best')
+
+            print('epoch %d / %d \t Validation: %.4f dB Best_PSNR (Best epoch %d): %.4f dB' %
+                  (epoch, opt.n_epochs + opt.n_epochs_decay, valid_psnr, best_epoch, best_psnr))
 
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
@@ -94,4 +103,5 @@ if __name__ == '__main__':
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
+
         model.update_learning_rate()
