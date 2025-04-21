@@ -8,7 +8,7 @@ import util
 if __name__ == '__main__':
     opt = TuningOptions().parse()   # get training options
     dataset = create_dataset(opt,'tuning')  # create a dataset given opt.dataset_mode and other options
-    validation = create_dataset(opt,'valid')
+    #validation = create_dataset(opt,'valid')
     dataset_size = len(dataset)
     validation_size = len(validation)
     print('The number of tuning images = %d' % dataset_size)
