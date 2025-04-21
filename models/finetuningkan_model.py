@@ -447,6 +447,6 @@ class FinetuningkanModel(BaseModel):
 
     @staticmethod
     def get_option_setter():
-    return FinetuningKANModel.modify_commandline_options
+        return FinetuningKANModel.modify_commandline_options
 
 
