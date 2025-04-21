@@ -19,6 +19,8 @@ class DiffusionModel(BaseModel):
 
         return parser    
     def __init__(self, opt):
+        self.sigma = opt.sigma
+
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['f','sigma']
